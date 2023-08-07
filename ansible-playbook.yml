@@ -16,9 +16,9 @@
     become : yes
     become_user : root
     
-  - name: Stop Container
-    hosts: localhost
-    tasks:
+  - name : Stop Container
+    hosts : localhost
+    tasks :
       - name: Stop the container
         docker_container:
           name: insure-me
