@@ -15,14 +15,14 @@
     command : sudo systemctl start docker
     become : yes
     become_user : root
-
-  - name: Stop the http-server1 container
-    docker_container:
-      name: insure-me
-      state: stopped
-
-  - name: Remove Existing Container
-    command: docker rm insure-me
+    
+  - name: Stop Container
+    hosts: localhost
+    tasks:
+      - name: Stop the container
+        docker_container:
+          name: insure-me
+          state: stopped
 
   - name: Deploy Docker Container
     command: docker run -itd -p 8084:8081 sivaops7/insure-me:3.0
