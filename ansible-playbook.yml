@@ -16,10 +16,10 @@
     become : yes
     become_user : root
 
-  - name : Stop the http-server/container
+  - name : Stop the http-server1 container
     docker_container:
-    name : insure-me
-    state : stopped
+      name : insure-me
+      state : stopped
 
   - name : Remove Existing Container
     command : docker rm insure-me
