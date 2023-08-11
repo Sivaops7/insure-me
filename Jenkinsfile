@@ -8,25 +8,17 @@ node{
     
     stage('prepare enviroment'){
         echo 'initialize all the variables'
-        mavenHome = tool name: 'maven' , type: 'maven'
+        mavenHome = tool name: 'myMaven' , type: 'maven'
         mavenCMD = "${mavenHome}/bin/mvn"
-        docker = tool name: 'docker' , type: 'org.jenkinsci.plugins.docker.commons.tools.DockerTool'
+        docker = tool name: 'myDocker' , type: 'org.jenkinsci.plugins.docker.commons.tools.DockerTool'
         dockerCMD = "${docker}/bin/docker"
         tagName="3.0"
     }
     
-    stage('git code checkout'){
-        try{
-            echo 'checkout the code from git repository'
-            git 'https://github.com/shubhamkushwah123/star-agile-insurance-project.git'
-        }
-        catch(Exception e){
-            echo 'Exception occured in Git Code Checkout Stage'
-            currentBuild.result = "FAILURE"
-            emailext body: '''Dear All,
-            The Jenkins job ${JOB_NAME} has been failed. Request you to please have a look at it immediately by clicking on the below link. 
-            ${BUILD_URL}''', subject: 'Job ${JOB_NAME} ${BUILD_NUMBER} is failed', to: 'shubham@gmail.com'
-        }
+    stage('git code clone'){
+        echo 'cloning the code from git repository'
+        git 'https://github.com/Sivaops7/insure-me.git'
+        
     }
     
     stage('Build the Application'){
@@ -40,26 +32,31 @@ node{
     }
     
     stage('Containerize the application'){
+        try{
         echo 'Creating Docker image'
-        sh "${dockerCMD} build -t shubhamkushwah123/insure-me:${tagName} ."
+        sh "${dockerCMD} build -t sivaops7/insure-me:${tagName} ."
+        }
+        catch(Exception e){
+            echo 'Exception occur in stage Dcker Build'
+            currentBuild.result = "FAILURE"
+            emailext body: '''Hello,
+            We are having issue in Docker Build command .can you please look into the same
+            Thanks 
+            Jenkins Admin''', subject: 'Attention:${JOB_NAME} is failed.please into the ${BUILD_NAME}', to: 'sivabalana91@gmail.com'
+        }
     }
     
     stage('Pushing it ot the DockerHub'){
         echo 'Pushing the docker image to DockerHub'
-        withCredentials([string(credentialsId: 'dock-password', variable: 'dockerHubPassword')]) {
-        sh "${dockerCMD} login -u shubhamkushwah123 -p ${dockerHubPassword}"
-        sh "${dockerCMD} push shubhamkushwah123/insure-me:${tagName}"
-            
-        }
+        withCredentials([string(credentialsId: 'dockerpassword', variable: 'dockerpassword')]) { 
+                sh "${dockerCMD} login -u sivaops7 -p ${dockerPassword}"
+                sh "${dockerCMD} push sivaops7/insure-me:${tagName}"
+        }   
+      
+    }
         
     stage('Configure and Deploy to the test-server'){
-        ansiblePlaybook become: true, credentialsId: 'ansible-key', disableHostKeyChecking: true, installation: 'ansible', inventory: '/etc/ansible/hosts', playbook: 'ansible-playbook.yml'
+        ansiblePlaybook become: true, credentialsId: 'ansiblekey', disableHostKeyChecking: true, installation: 'myAnsible', inventory: '/etc/ansible/hosts', playbook: 'ansible-playbook.yml'
     }
         
-        
-    }
 }
-
-
-
-
